@@ -2,14 +2,12 @@
 
 from bom_cl import *
 from files import *
-import os
 
 my_file_checker = FileChecker()
-folderpath = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(folderpath, 'output.csv')
+file_path = make_here('out.csv')
 
 # my_file_checker.get_fldr(folderpath)
-files_lst = my_file_checker.list_files(folderpath, r'.csv$')
+files_lst = my_file_checker.list_files(crrt_folder_path, r'.csv$')
 
 for csvfile in files_lst:
     my_raw_table = RawTable()

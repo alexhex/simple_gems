@@ -73,6 +73,7 @@ class FileChecker():
 
 # 6. If confirmed, start copying and replacing the files;
 
+
     def replace_files(self):
         for key in self.file_pair.keys():
             # Instead of covering the original files, we delete the "Smith" files and make copies of
@@ -117,3 +118,11 @@ class LineReader():
                 if not line:
                     break
                 yield line
+
+
+crrt_folder_path = os.path.dirname(os.path.abspath(__file__))
+
+
+def make_here(filename):
+    filepath = os.path.join(crrt_folder_path, filename)
+    return filepath
