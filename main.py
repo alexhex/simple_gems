@@ -10,13 +10,14 @@ file_path = make_here('out.csv')
 files_lst = my_file_checker.list_files(crrt_folder_path, r'.csv$')
 
 for csvfile in files_lst:
-    my_raw_table = RawTable()
-    my_raw_table.make_table(csvfile)
+    # my_raw_table = RawTable()
+    # my_raw_table.make_table(csvfile)
 
     my_converter = ValConverter()
     my_checker = Checker()
 
-    my_bom = Ebom(my_raw_table, my_converter)
+    my_bom = Ebom(my_converter)
+    my_bom.make_table(csvfile)
     my_bom.make_ebom()
 
     phantom_kits_list = ['103235257', '103235214', '100029390',
