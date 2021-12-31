@@ -3,33 +3,14 @@
 
 import re
 import csv
+import os
 # import collections
 
 
-assy_level = 2
-cmpnt_level = 3
+assy_level = 1
+cmpnt_level = 2
 
 features = ['Drawing', 'Material', 'QCP', 'Coating', 'NDE', 'CIS']
-
-
-class RawTable:
-    'RawTable reads the file and discard the lines out of the table'
-
-    def __init__(self):
-        self.table = []
-
-    # The original csv file is exported from GeMS, make_table will discard the file head.
-    def make_table(self, path):
-        with open(path, 'r', newline='', errors='ignore') as header:
-            head = header.readlines()
-            for i in range(len(head)):
-                if re.match(r'Level,', head[i]):
-                    break
-            self.table = head[i:]
-            # print (self.table)
-
-    def return_table(self):
-        return self.table if self.table else None
 
 
 class ValConverter:
@@ -116,17 +97,25 @@ class ValConverter:
 class Ebom:
     'Ebom is to convert the RawTable to a true BOM structure'
 
-    def __init__(self, table, converter):
+    def __init__(self, converter):
+        self.raw_table = []
         self.ebom = []
         self.ebom_depth = 0
-        self.rawtable = table.return_table()
         self.converter = converter
         self.assy_level = 0
         self.cmpnt_level = 0
 
+    def make_table(self, path):
+        with open(path, 'r', newline='', errors='ignore') as header:
+            head = header.readlines()
+            for i in range(len(head)):
+                if re.match(r'Level,', head[i]):
+                    break
+            self.raw_table = head[i:]
+
     def make_ebom(self):
         # self.ebom would be a list of OrderedDict.
-        self.ebom = list(csv.DictReader(self.rawtable))
+        self.ebom = list(csv.DictReader(self.raw_table))
         for row in self.ebom:
             for typ in row.keys():
                 try:
@@ -366,21 +355,24 @@ class Comparer:
 # fullpath_2 = os.path.join(folderpath, 'ref.csv')
 # fullpath_3 = os.path.join(folderpath, 'common.csv')
 
-# table_1.make_table(fullpath_1)
-# table_2.make_table(fullpath_2)
+# # table_1.make_table(fullpath_1)
+# # table_2.make_table(fullpath_2)
 
 # my_converter = ValConverter()
 # my_checker = Checker()
 
 
-# base_ebom = Ebom(table_1, my_converter)
+# base_ebom = Ebom(my_converter)
+# base_ebom.make_table(fullpath_1)
 # base_ebom.make_ebom()
+
+# ref_ebom = Ebom(my_converter)
+# ref_ebom.make_table(fullpath_2)
+# ref_ebom.make_ebom()
 
 # base_assigner = Attributer(base_ebom, my_checker)
 # base_assigner.attribute()
 
-# ref_ebom = Ebom(table_2, my_converter)
-# ref_ebom.make_ebom()
 
 # ref_assigner = Attributer(ref_ebom, my_checker)
 # ref_assigner.attribute()
