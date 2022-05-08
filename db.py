@@ -14,9 +14,11 @@ class SqlTable():
         db_file_path = make_here('db.sqlite')
         self.conn = sqlite3.connect(db_file_path)
         self.cc = self.conn.cursor()
+        # self.c_cmmd = 'jREATE TABLE {tn}'
 
-    def create_assy_table(self, lod):
-        pass
+    def create_assy_table(self):
+        self.cc.execute("CREATE TABLE {tn} ({nf} {ft} auto_increment)".format(
+            tn='assemblies', nf='id', ft='INTEGER'))
 
     def read_assy_table(self):
         pass
@@ -26,3 +28,7 @@ class SqlTable():
 
     def delete_assy_table(self):
         pass
+
+
+my_sql = SqlTable()
+my_sql.create_assy_table()

@@ -3,14 +3,15 @@
 
 import re
 import csv
-import os
+# import os
 # import collections
 
 
-assy_level = 1
-cmpnt_level = 2
-
 features = ['Drawing', 'Material', 'QCP', 'Coating', 'NDE', 'CIS']
+
+necessary_attributes_in_csv = [
+    'Level', 'Name', 'Revision', 'Description', 'Qty', 'Usage'
+]
 
 
 class ValConverter:
@@ -95,17 +96,21 @@ class ValConverter:
 
 
 class Ebom:
-    'Ebom is to convert the RawTable to a true BOM structure'
+    'Ebom is to convert the RawTable to a BOM structure with Parent_ID and Assy_Num'
 
     def __init__(self, converter):
+        # raw table is a list of raw text lines
         self.raw_table = []
         self.ebom = []
         self.ebom_depth = 0
         self.converter = converter
         self.assy_level = 0
-        self.cmpnt_level = 0
+        # Component Level is removed as there's no fixed component level
+        # A separate logic is added to determine if it's sub-assy or component
+        # self.cmpnt_level = 0
 
-    def make_table(self, path):
+    def make_ebom(self, path):
+        # read content from file and generate raw_table and assy_level
         with open(path, 'r', newline='', errors='ignore') as header:
             head = header.readlines()
             for i in range(len(head)):
@@ -113,7 +118,11 @@ class Ebom:
                     break
             self.raw_table = head[i:]
 
-    def make_ebom(self):
+            # 101895166 is a temporary assembly to contain all assemblies to generate a BOM file for all assemblies
+            self.assy_level = 2 if '101895166' in head[i+1] else 1
+            # self.cmpnt_level = self.assy_level + 1
+
+    # def make_ebom(self):
         # self.ebom would be a list of OrderedDict.
         self.ebom = list(csv.DictReader(self.raw_table))
         for row in self.ebom:
@@ -123,18 +132,50 @@ class Ebom:
                 except KeyError:
                     pass
 
-        # Below is to add a column called "Parent Name" to record the parent_id
+        # Below is to add
+        #   1. a column called "Parent Name" to record the parent_id
+        #   2. a column called "Used in Assy" to record the assembly number
         # The lowerest ebom level in file is 1 not 0.
         # This can only be done after value conversion as level is an integer and was a text.
+
         self.ebom_depth = max([row['Level'] for row in self.ebom])
         id_group = [0] * self.ebom_depth
+        used_in_assy = ''
+
+        pos_group = [0] * self.ebom_depth
+        children_group = [set() for _ in self.ebom]
+        row_number = -1
+
         for row in self.ebom:
+            row_number += 1
             id_group[row['Level'] - 1] = row['Name']
+            pos_group[row['Level'] - 1] = row_number
+
             try:
                 row['Parent Name'] = id_group[row['Level'] - 2]
             except:
                 row['Parent Name'] = 'NA'
+
+            pos_group[row['Level'] - 1] = row_number
+            if row['Level'] >= 2 and row['Usage'] == 'Uses':
+                children_group[pos_group[row['Level']-2]].add(row['Name'])
+
         # print (self.ebom_depth)
+
+            if row['Level'] == self.assy_level:
+                used_in_assy = row['Name']
+                row["Used in Assy"] = 'NA'
+            else:
+                row["Used in Assy"] = used_in_assy
+
+        for row, child in zip(self.ebom, children_group):
+            row['Children'] = child
+            if row['Level'] == self.assy_level:
+                row['AC Level'] = "Assy"
+            elif len(child):
+                row['AC Level'] = "SubAssy"
+            else:
+                row['AC Level'] = "Cmpnt"
 
     def filter_ebom(self, level, parent='', usage=''):
         # return [(row['Name'], row['Qty']) for row in self.ebom if row['Level'] == level]
@@ -146,6 +187,13 @@ class Ebom:
             return [row for row in self.ebom if (row['Level'] == level and row['Parent Name'] == parent)]
         else:
             return [row for row in self.ebom if (row['Level'] == level and row['Parent Name'] == parent and row['Usage'] == usage)]
+
+    # def get_bom_of_assy(self, assy):
+    #     return [row for row in self.ebom if (row['Name'] == assy or row['Used in Assy'] == assy)]
+
+    # def analyze_assy(self, assy, assy_tree):
+    #     children = [set()] * self.ebom_depth
+    #     initial_level = row['Level'] for row in assy_tree if row['Name']
 
     def phantom_item(self, pn):
 
@@ -241,10 +289,11 @@ class Attributer:
 
     def attribute(self):
         # Give attributes to each component
-        parts = self.ebom.filter_ebom(cmpnt_level, '', 'Uses')
+        parts = self.ebom.filter_ebom(self.ebom.cmpnt_level, '', 'Uses')
 
         for part in parts:
-            lines = self.ebom.filter_ebom(cmpnt_level + 1, part['Name'])
+            lines = self.ebom.filter_ebom(
+                self.ebom.cmpnt_level + 1, part['Name'])
             for attr in features:
                 part[attr] = set()
                 for line in lines:
@@ -258,8 +307,10 @@ class Comparer:
         self.ref = ref
         self.resultpath = resultpath
 
-        self.base_parts = self.base.filter_ebom(cmpnt_level, '', 'Uses')
-        self.ref_parts = self.ref.filter_ebom(cmpnt_level, '', 'Uses')
+        self.base_parts = self.base.filter_ebom(
+            self.base.cmpnt_level, '', 'Uses')
+        self.ref_parts = self.ref.filter_ebom(
+            self.ref.cmpnt_level, '', 'Uses')
 
         self.result = []
         self.head = ['Item Number', 'New Packer',

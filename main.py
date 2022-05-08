@@ -3,7 +3,7 @@
 from bom_cl import *
 from files import *
 
-my_file_checker = FileChecker()
+my_file_checker = FileFinder()
 file_path = make_here('out.csv')
 
 # my_file_checker.get_fldr(folderpath)
@@ -17,8 +17,8 @@ for csvfile in files_lst:
     my_checker = Checker()
 
     my_bom = Ebom(my_converter)
-    my_bom.make_table(csvfile)
-    my_bom.make_ebom()
+    my_bom.make_ebom(csvfile)
+    # my_bom.make_ebom()
 
     phantom_kits_list = ['103235257', '103235214', '100029390',
                          '103235261', '103235212', '103235208', '103235216', '103235250']
