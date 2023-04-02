@@ -9,6 +9,9 @@ import csv
 
 features = ['Drawing', 'Material', 'QCP', 'Coating', 'NDE', 'CIS']
 
+attributes = ['Drawing', 'Assy Procedure',
+              'FAT Procedure', 'Assy Checklist', 'QCP']
+
 necessary_attributes_in_csv = [
     'Level', 'Name', 'Revision', 'Description', 'Qty', 'Usage'
 ]
@@ -177,16 +180,14 @@ class Ebom:
             else:
                 row['AC Level'] = "Cmpnt"
 
-    def filter_ebom(self, level, parent='', usage=''):
+    def filter_ebom(self, parent):
         # return [(row['Name'], row['Qty']) for row in self.ebom if row['Level'] == level]
-        if (not usage) and (not parent):
-            return [row for row in self.ebom if (row['Level'] == level)]
-        elif (usage and not parent):
-            return [row for row in self.ebom if (row['Level'] == level and row['Usage'] == usage)]
-        elif (parent and not usage):
-            return [row for row in self.ebom if (row['Level'] == level and row['Parent Name'] == parent)]
-        else:
-            return [row for row in self.ebom if (row['Level'] == level and row['Parent Name'] == parent and row['Usage'] == usage)]
+        return [row for row in self.ebom if (row['Parent Name'] == parent or row['Name'] == 'parent')]
+
+    def return_cmpnt(self):
+
+        # return [(row['Name'], row['Qty']) for row in self.ebom if row['Level'] == level]
+        return [row for row in self.ebom if (row['AC Level'] == "Cmpnt")]
 
     # def get_bom_of_assy(self, assy):
     #     return [row for row in self.ebom if (row['Name'] == assy or row['Used in Assy'] == assy)]
@@ -279,6 +280,8 @@ class Checker:
             return True
         return False
 
+    # def is_assy_procedure(self, line):
+
 
 class Attributer:
     'to assign the attributes to one specific column to specify if it is specific type of doc'
@@ -289,11 +292,11 @@ class Attributer:
 
     def attribute(self):
         # Give attributes to each component
-        parts = self.ebom.filter_ebom(self.ebom.cmpnt_level, '', 'Uses')
+        parts = self.ebom.return_cmpnt()
 
         for part in parts:
             lines = self.ebom.filter_ebom(
-                self.ebom.cmpnt_level + 1, part['Name'])
+                part['Name'])
             for attr in features:
                 part[attr] = set()
                 for line in lines:

@@ -11,7 +11,7 @@ import shutil
 crrt_folder_path = os.path.dirname(os.path.abspath(__file__))
 
 
-def make_here(filename):
+def make_full_path_here(filename):
     filepath = os.path.join(crrt_folder_path, filename)
     return filepath
 

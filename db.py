@@ -3,6 +3,12 @@
 # Alexhex 12-29-2021
 
 
+# Design:
+# Assy_table for all assemblies with children as a column of set of values;
+# Cmpnt_table for all components with features;
+# Bom_table for assy-cmpnt relationship;
+
+
 import sqlite3
 
 from files import *
@@ -11,7 +17,7 @@ from files import *
 class SqlTable():
 
     def __init__(self):
-        db_file_path = make_here('db.sqlite')
+        db_file_path = make_full_path_here('db.sqlite')
         self.conn = sqlite3.connect(db_file_path)
         self.cc = self.conn.cursor()
         # self.c_cmmd = 'jREATE TABLE {tn}'
