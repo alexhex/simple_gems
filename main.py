@@ -8,7 +8,7 @@ file_path = make_full_path_here('out2.csv')
 
 # my_file_checker.get_fldr(folderpath)
 # files_lst = my_file_checker.list_files(crrt_folder_path, r'.csv$')
-in_file_path = make_full_path_here('KSV_LH_JUNE.csv')
+in_file_path = make_full_path_here('manara bom.csv')
 
 # for csvfile in files_lst:
 # my_raw_table = RawTable()
@@ -25,8 +25,8 @@ my_bom.make_ebom(in_file_path)
 #  '103235261', '103235212', '103235208', '103235216', '103235250']
 # my_bom.phantom_item(phantom_kits_list)
 
-# my_attributer = Attributer(my_bom, my_checker)
-# my_attributer.attribute()
+my_attributer = Attributer(my_bom, my_checker)
+my_attributer.attribute()
 
 # new_bom = my_bom.filter_ebom(3, '', 'Uses')
 

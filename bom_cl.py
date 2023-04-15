@@ -6,9 +6,11 @@ import csv
 # import os
 # import collections
 
-
+# features are for the components
 features = ['Drawing', 'Material', 'QCP', 'Coating', 'NDE', 'CIS']
 
+
+# attributes are for the commercial level parts/assemblies
 attributes = ['Drawing', 'Assy Procedure',
               'FAT Procedure', 'Assy Checklist', 'QCP']
 
@@ -152,7 +154,7 @@ class Ebom:
         for row in self.ebom:
             row_number += 1
             id_group[row['Level'] - 1] = row['Name']
-            pos_group[row['Level'] - 1] = row_number
+            # pos_group[row['Level'] - 1] = row_number
 
             try:
                 row['Parent Name'] = id_group[row['Level'] - 2]
@@ -177,8 +179,10 @@ class Ebom:
                 row['AC Level'] = "Assy"
             elif len(child):
                 row['AC Level'] = "SubAssy"
-            else:
+            elif row['Usage'] == 'Uses':
                 row['AC Level'] = "Cmpnt"
+            else:
+                row['AC Level'] = 'N/A'
 
     def filter_ebom(self, parent):
         # return [(row['Name'], row['Qty']) for row in self.ebom if row['Level'] == level]
@@ -196,34 +200,34 @@ class Ebom:
     #     children = [set()] * self.ebom_depth
     #     initial_level = row['Level'] for row in assy_tree if row['Name']
 
-    def phantom_item(self, pn):
+    # def phantom_item(self, pn):
 
-        for part_number in pn:
+    #     for part_number in pn:
 
-            phantom_flag = False
-            current_level = self.ebom_depth
-            current_parent = [0] * self.ebom_depth
-            # current_parent = []
+    #         phantom_flag = False
+    #         current_level = self.ebom_depth
+    #         current_parent = [0] * self.ebom_depth
+    #         # current_parent = []
 
-            for item in self.ebom:
-                if phantom_flag == False:
-                    if item['Name'] == part_number:
-                        current_level = item['Level']
-                        current_parent[0] = item['Parent Name']
-                        self.ebom.remove(item)
-                        # item['Phantom Flag'] = True
-                        phantom_flag = True
-                        # break
-                else:
-                    if item['Level'] > current_level:
-                        level_diff = item['Level'] - current_level
-                        item['Level'] = item['Level'] - 1
-                        item['Parent Name'] = current_parent[level_diff-1]
-                        current_parent[level_diff] = item['Name']
+    #         for item in self.ebom:
+    #             if phantom_flag == False:
+    #                 if item['Name'] == part_number:
+    #                     current_level = item['Level']
+    #                     current_parent[0] = item['Parent Name']
+    #                     self.ebom.remove(item)
+    #                     # item['Phantom Flag'] = True
+    #                     phantom_flag = True
+    #                     # break
+    #             else:
+    #                 if item['Level'] > current_level:
+    #                     level_diff = item['Level'] - current_level
+    #                     item['Level'] = item['Level'] - 1
+    #                     item['Parent Name'] = current_parent[level_diff-1]
+    #                     current_parent[level_diff] = item['Name']
 
-                    else:
-                        phantom_flag = False
-                        break
+    #                 else:
+    #                     phantom_flag = False
+    #                     break
 
     def return_ebom(self):
         return self.ebom if self.ebom_depth else None

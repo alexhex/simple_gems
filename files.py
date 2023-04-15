@@ -7,6 +7,7 @@ from csv import DictWriter
 import os
 import re
 import shutil
+from collections import OrderedDict
 
 crrt_folder_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,14 +32,8 @@ class FileFinder():
         self.errorlog = ''
 
     def get_fldr(self, fldr):
-        # self.dest_folder = input("请输入准备寄送的文件夹： "
         self.folder = fldr
 
-    # def get_rsc_fldr(self, fldr):
-        # self.res_folder = input("请输入含有所需文件的文件夹：")
-        # self.res_folder = fldr
-
-    # 3. Go thru the 2 folders and get a list of the files in each folder;
     def list_files(self, folder, pttrn):
         file_lst = []
         for rootpath, dirs, files in os.walk(folder):
@@ -101,9 +96,9 @@ class TablaWriter():
         self.lst_dict = lst_dict
 
     def write_table(self):
-        keys = self.lst_dict[0].keys()
+        keys = max(self.lst_dict, key=lambda x: len(x.keys())).keys()
         with open(self.filepath, 'w', newline='') as write_handle:
-            dict_ww = DictWriter(write_handle, keys)
+            dict_ww = DictWriter(write_handle, keys, restval='N/A')
             dict_ww.writeheader()
             dict_ww.writerows(self.lst_dict)
 
